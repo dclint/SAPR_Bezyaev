@@ -1,25 +1,21 @@
 import json
 
 def interpolate(x, points):
-    """
-    Линейная интерполяция между (x1,y1) и (x2,y2).
-    Если x1 == x2 — обрабатываем аккуратно, 
-    чтобы не делить на ноль.
-    """
+ 
     for i in range(len(points) - 1):
         x1, y1 = points[i]
         x2, y2 = points[i + 1]
 
         if x1 == x2:
-            # Вертикальный отрезок
+          
             if x == x1:
-                # Возьмём среднее значение (или y1)
+               
                 return (y1 + y2)/2  
-            # иначе пропускаем
+           
             continue
         
         if x1 <= x <= x2:
-            # Линейная интерполяция
+            
             return y1 + (y2 - y1) * (x - x1) / (x2 - x1)
     return 0
 
@@ -27,24 +23,14 @@ def membership_function(value, fuzzy_set):
     return interpolate(value, fuzzy_set)
 
 def get_temperature_membership(value, temp_sets):
-    """
-    Для каждого терма (id, points) в temp_sets 
-    считаем принадлежность нашего value (T).
-    """
+
     return {
         term["id"]: membership_function(value, term["points"])
         for term in temp_sets
     }
 
 def defuzzify_by_rules(temp_deg, rules):
-    """
-    Реализуем метод 'Sugeno 0-order':
-    - Для каждого правила (tempTerm -> heatTerm) 
-      берём вес = µ(tempTerm).
-    - Умножаем вес на 'репрезентативное число' heatTerm
-    - Делим сумму на сумму весов
-    """
-    # Карта "какой терм нагрева" -> "числовое значение"
+
     heating_map = {
         "слабый": 4,
         "умеренный": 12,
@@ -55,7 +41,7 @@ def defuzzify_by_rules(temp_deg, rules):
     denominator = 0.0
     for (temp_term, heat_term) in rules:
         w = temp_deg.get(temp_term, 0.0)
-        # Добавляем вклад
+ 
         numerator += w * heating_map.get(heat_term, 0)
         denominator += w
 
@@ -65,37 +51,26 @@ def defuzzify_by_rules(temp_deg, rules):
         return 0
 
 def task(temp_json, heat_json, rules_json, current_temperature):
-    """
-    Основная функция, вызываемая тестом.
-    - temp_json содержит "температура": [...],
-    - heat_json содержит "нагрев": [...], НО в реальности 
-      при данном тесте эти данные не влияют 
-      (т.к. логика требует 'холодно -> интенсивный' и т.д.),
-    - rules_json — список правил типа [["холодно","интенсивный"], ...],
-    - current_temperature — число, например 5.
 
-    Возвращаем дефаззифицированный результат (0..26).
-    """
-    # Парсим входные JSON
+  
     temp_data_parsed = json.loads(temp_json)
-    # Вот тут действительно берем "температура":
+    
     temperature_sets = temp_data_parsed["температура"]
 
-    # heat_json тоже парсим, чтобы тест не ругался, 
-    # но не используем - тест ожидает другую логику.
-    _ = json.loads(heat_json)  # просто читаем, игнорируем
+   
+    _ = json.loads(heat_json)  
 
-    # Правила
+
     rules = json.loads(rules_json)
 
-    # Определяем, насколько T принадлежит холодно/комфортно/жарко
+    
     temp_degree = get_temperature_membership(current_temperature, temperature_sets)
 
-    # По правилам дефаззифицируем, получая нужное число
+
     result_value = defuzzify_by_rules(temp_degree, rules)
     return result_value
 
-# Пример самостоятельного запуска:
+
 if __name__ == "__main__":
     temp_json_example = '''{
       "температура": [
@@ -167,6 +142,6 @@ if __name__ == "__main__":
       ["жарко", "слабый"]
     ]'''
 
-    # Проверяем для T=5
+
     val = task(temp_json_example, heat_json_example, rules_json_example, 5)
-    print(f"T=5 => {val}")  # Ожидаем что-то > 18
+    print(f"T=5 => {val}")  
